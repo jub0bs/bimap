@@ -32,10 +32,15 @@ func New(type K, V comparable)() *Bimap(K, V) {
 	return &Bimap(K, V){}
 }
 
-// Store creates a key-value pair. Pre-existing key-value pairs
-// (if any) that involve the given key and/or the given value are
-// silently removed from the Bimap.
-func (bi *Bimap(K, V)) Store(key K, value V) {
+// Store creates a key-value pair and returns whether or not the
+// operation was successful. Pre-existing key-value pairs (if any)
+// that involve the given key and/or the given value are silently
+// removed from the Bimap. Keys and values for which equality is
+// not reflexive are disallowed.
+func (bi *Bimap(K, V)) Store(key K, value V) bool {
+	if !isEqualityReflexive(key) || !isEqualityReflexive(value) {
+		return false
+	}
 	bi.mu.Lock()
 	defer bi.mu.Unlock()
 	k, exists := bi.inverse[value]
@@ -52,6 +57,11 @@ func (bi *Bimap(K, V)) Store(key K, value V) {
 	}
 	bi.forward[key] = value
 	bi.inverse[value] = key
+	return true
+}
+
+func isEqualityReflexive(type T comparable)(t T) bool {
+	return t == t
 }
 
 // LoadValue returns the value stored in the Bimap for a key,
