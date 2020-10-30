@@ -21,15 +21,15 @@ import (
 //
 // The zero value for Bimap is empty and ready for use.
 // A Bimap must not be copied after first use.
-type Bimap(type K, V comparable) struct {
+type Bimap[K, V comparable] struct {
 	mu      sync.RWMutex
 	forward map[K]V
 	inverse map[V]K
 }
 
 // New returns a new, empty Bimap.
-func New(type K, V comparable)() *Bimap(K, V) {
-	return &Bimap(K, V){}
+func New[K, V comparable]() *Bimap(K, V) {
+	return &Bimap[K, V]{}
 }
 
 // Store creates a key-value pair and returns whether or not the
@@ -37,7 +37,7 @@ func New(type K, V comparable)() *Bimap(K, V) {
 // that involve the given key and/or the given value are silently
 // removed from the Bimap. Keys and values for which equality is
 // not reflexive are disallowed.
-func (bi *Bimap(K, V)) Store(key K, value V) bool {
+func (bi *Bimap[K, V]) Store(key K, value V) bool {
 	if !isEqualityReflexive(key) || !isEqualityReflexive(value) {
 		return false
 	}
@@ -60,14 +60,14 @@ func (bi *Bimap(K, V)) Store(key K, value V) bool {
 	return true
 }
 
-func isEqualityReflexive(type T comparable)(t T) bool {
+func isEqualityReflexive[T comparable](t T) bool {
 	return t == t
 }
 
 // LoadValue returns the value stored in the Bimap for a key,
 // or the zero value of the K type if no value is present.
 // The ok result indicates whether the key was found in the map.
-func (bi *Bimap(K, V)) LoadValue(k K) (V, bool) {
+func (bi *Bimap[K, V]) LoadValue(k K) (V, bool) {
 	bi.mu.RLock()
 	v, ok := bi.forward[k]
 	bi.mu.RUnlock()
@@ -78,7 +78,7 @@ func (bi *Bimap(K, V)) LoadValue(k K) (V, bool) {
 // or the zero value of the V type if no key is present.
 // The ok result indicates whether the value was found in the
 // map.
-func (bi *Bimap(K, V)) LoadKey(v V) (K, bool) {
+func (bi *Bimap[K, V]) LoadKey(v V) (K, bool) {
 	bi.mu.RLock()
 	k, ok := bi.inverse[v]
 	bi.mu.RUnlock()
@@ -87,7 +87,7 @@ func (bi *Bimap(K, V)) LoadKey(v V) (K, bool) {
 
 // DeleteByKey deletes the key-value pair involving the given
 // key.
-func (bi *Bimap(K, V)) DeleteByKey(k K) {
+func (bi *Bimap[K, V]) DeleteByKey(k K) {
 	bi.mu.Lock()
 	v := bi.forward[k]
 	delete(bi.forward, k)
@@ -97,7 +97,7 @@ func (bi *Bimap(K, V)) DeleteByKey(k K) {
 
 // DeleteByValue deletes the key-value pair involving the given
 // value.
-func (bi *Bimap(K, V)) DeleteByValue(v V) {
+func (bi *Bimap[K, V]) DeleteByValue(v V) {
 	bi.mu.Lock()
 	k := bi.inverse[v]
 	delete(bi.inverse, v)
@@ -107,14 +107,14 @@ func (bi *Bimap(K, V)) DeleteByValue(v V) {
 
 // Size returns the number of key-value pairs in the Bimap.
 // The complexity is O(1).
-func (bi *Bimap(K, V)) Size() int {
+func (bi *Bimap[K, V]) Size() int {
 	bi.mu.RLock()
 	defer bi.mu.RUnlock()
 	return len(bi.forward)
 }
 
 // Keys returns a slice of the keys in the Bimap.
-func (bi *Bimap(K, V)) Keys() []K {
+func (bi *Bimap[K, V]) Keys() []K {
 	var keys []K
 	bi.mu.RLock()
 	for k := range bi.forward {
@@ -125,7 +125,7 @@ func (bi *Bimap(K, V)) Keys() []K {
 }
 
 // Values returns a slice of the values in the Bimap.
-func (bi *Bimap(K, V)) Values() []V {
+func (bi *Bimap[K, V]) Values() []V {
 	var values []V
 	bi.mu.RLock()
 	for v := range bi.inverse {
@@ -138,6 +138,6 @@ func (bi *Bimap(K, V)) Values() []V {
 // String returns a string representing the Bimap. That string
 // representation is similar to the string representation of a
 // built-in map.
-func (bi *Bimap(K, V)) String() string {
+func (bi *Bimap[K, V]) String() string {
 	return fmt.Sprintf("Bi%v", bi.forward)
 }
